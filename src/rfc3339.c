@@ -83,11 +83,19 @@ static int _get_local_utc_offset(void) {
     return local_utc_offset;
 }
 
+#if defined(__MACH__)
+#define CLOCK_REALTIME_COARSE CLOCK_REALTIME
+#endif
+
 /* Get current time using gettimeofday(), ftime() or time() depending on
  * support.
  */
 static double _gettime(void) {
-#if defined(HAVE_GETTIMEOFDAY)
+#if defined(HAVE_CLOCKGETTIME)
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME_COARSE, &ts);
+    return ((double)ts.tv_sec) + ((double)ts.tv_nsec * 0.000000001);
+#elif defined(HAVE_GETTIMEOFDAY)
     // => Use gettimeofday() in usec
     struct timeval t;
 #if defined(GETTIMEOFDAY_NO_TZ)

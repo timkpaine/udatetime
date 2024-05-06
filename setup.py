@@ -29,6 +29,9 @@ elif sys.version_info.major == 2:
 elif sys.version_info.major == 3:
     macros.append(('_PYTHON3', '1'))
 
+if os.environ.get('USE_CLOCKGETTIME', '1') == '1':
+    macros.append(('HAVE_CLOCKGETTIME', '1'))
+
 ext_modules = []
 
 if __pypy__ is None:
