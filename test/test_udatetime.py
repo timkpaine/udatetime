@@ -1,6 +1,10 @@
 import unittest
+from copy import deepcopy
 from datetime import datetime, timedelta, tzinfo
+from pickle import loads, dumps
 import udatetime
+import pickle
+import copy
 
 NO_DST = timedelta(0)
 
@@ -245,6 +249,17 @@ class Test(unittest.TestCase):
             udatetime.from_string('2016-07-15T12:33:20.0Z'),
             udatetime.from_string('2016-07-15T12:33:20Z'),
         )
+
+    def test_pickle(self):
+        rfc3339 = '2016-07-15T12:33:20.123000+01:30'
+        dt = udatetime.from_string(rfc3339)
+        pickle = dumps(dt)
+        self.assertEqual(dt.tzinfo.offset, loads(pickle).tzinfo.offset)
+
+    def test_deepcopy(self):
+        rfc3339 = '2016-07-15T12:33:20.123000+01:30'
+        dt = udatetime.from_string(rfc3339)
+        self.assertEqual(dt, deepcopy(dt))
 
 
 

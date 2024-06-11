@@ -7,8 +7,11 @@ DATE_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
 class TZFixedOffset(tzinfo):
 
-    def __init__(self, offset):
+    def __init__(self, offset=None):
         self.offset = offset
+
+    def __deepcopy__(self, memo):
+        return TZFixedOffset(self.offset)
 
     def utcoffset(self, dt=None):
         return timedelta(seconds=self.offset * 60)

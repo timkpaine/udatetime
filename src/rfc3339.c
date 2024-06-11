@@ -540,7 +540,7 @@ typedef struct {
  */
 static int FixedOffset_init(FixedOffset *self, PyObject *args, PyObject *kwargs) {
     int offset;
-    if (!PyArg_ParseTuple(args, "i", &offset))
+    if (!PyArg_ParseTuple(args, "|i", &offset))
         return -1;
 
     self->offset = offset;
@@ -600,8 +600,48 @@ static PyObject *FixedOffset_tzname(FixedOffset *self, PyObject *args) {
  *     return self.tzname()
  */
 static PyObject *FixedOffset_repr(FixedOffset *self) {
+
     return FixedOffset_tzname(self, NULL);
 }
+
+/*
+ * def __deepcopy__(self):
+ */
+static PyTypeObject FixedOffset_type;
+PyObject *FixedOffset_deepcopy(FixedOffset *self) {
+    PyObject *new_offset = FixedOffset_type.tp_alloc(&FixedOffset_type, 0);
+    Py_INCREF(new_offset);
+    PyObject_SetAttrString(new_offset, "offset", PyLong_FromLong(self->offset));
+    return new_offset;
+}
+
+/*
+ * def __getstate__(self):
+ */
+static PyObject *FixedOffset_getstate(FixedOffset *self, PyObject *Py_UNUSED(ignored)) {
+    PyObject *ret = Py_BuildValue("{si}", "offset", self->offset);
+    return ret;
+}
+
+/*
+ * def __setstate__(self):
+ */
+static PyObject *FixedOffset_setstate(FixedOffset *self, PyObject *state) {
+    /* Error check. */
+    if (!PyDict_CheckExact(state)) {
+        PyErr_SetString(PyExc_ValueError, "Pickled object is not an offset.");
+        return NULL;
+    }
+    /* Borrowed reference but no need to incref as we create a C long from it. */
+    PyObject *number = PyDict_GetItemString(state, "offset");
+    if (number == NULL) {
+        PyErr_SetString(PyExc_KeyError, "No \"offset\" in pickled.");
+        return NULL;
+    }
+    self->offset = (int) PyLong_AsLong(number);
+    Py_RETURN_NONE;
+}
+
 
 /*
  * Class member / class attributes
@@ -618,13 +658,16 @@ static PyMethodDef FixedOffset_methods[] = {
     {"utcoffset", (PyCFunction)FixedOffset_utcoffset, METH_VARARGS, ""},
     {"dst",       (PyCFunction)FixedOffset_dst,       METH_VARARGS, ""},
     {"tzname",    (PyCFunction)FixedOffset_tzname,    METH_VARARGS, ""},
+    {"__deepcopy__", (PyCFunction) FixedOffset_deepcopy, METH_VARARGS, ""},
+    {"__getstate__", (PyCFunction) FixedOffset_getstate, METH_NOARGS, ""},
+    {"__setstate__", (PyCFunction) FixedOffset_setstate, METH_O, ""},
     {NULL}
 };
 
 #ifdef _PYTHON3
 static PyTypeObject FixedOffset_type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "rfc3339.FixedOffset_type",             /* tp_name */
+    "udatetime.rfc3339.TZFixedOffset",      /* tp_name */
     sizeof(FixedOffset),                    /* tp_basicsize */
     0,                                      /* tp_itemsize */
     0,                                      /* tp_dealloc */
@@ -649,7 +692,7 @@ static PyTypeObject FixedOffset_type = {
 static PyTypeObject FixedOffset_type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "rfc3339.FixedOffset_type", /*tp_name*/
+    "udatetime.rfc3339.TZFixedOffset", /*tp_name*/
     sizeof(FixedOffset),       /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     0,                         /*tp_dealloc*/
