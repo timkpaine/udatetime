@@ -36,9 +36,9 @@ if __pypy__ is None:
         Extension(
             'udatetime.rfc3339',
             ['./src/rfc3339.c'],
-            libraries=['m'],
+            libraries=[] if os.name == 'nt' else ['m'] ,
             define_macros=macros,
-            extra_compile_args=['-Ofast', '-std=c99']
+            extra_compile_args=['/O2'] if os.name == 'nt' else ['-Ofast', '-std=c99']
         )
     )
 
@@ -47,6 +47,7 @@ setup(
     version=__version__,
     description='Fast RFC3339 compliant date-time library',
     long_description=readme,
+    long_description_content_type="text/x-mardown",
     license='Apache 2.0',
     classifiers=[
         'Development Status :: 5 - Production/Stable',

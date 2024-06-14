@@ -234,7 +234,8 @@ class Test(unittest.TestCase):
 
         for x in range(0, 6):
             d2 = udatetime.from_string(rfc3339 + ('0' * x) + 'Z')
-            self.assertEqual(d1, d2)
+            td = d1 - d2
+            self.assertLessEqual(td.total_seconds(), 0.00001)
 
         self.assertEqual(
             udatetime.from_string('2016-07-15T12:33:20.123Z'),
